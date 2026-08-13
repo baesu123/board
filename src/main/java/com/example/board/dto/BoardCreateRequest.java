@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-//게시글 등록용 DTO (유효성 검사)
 @Getter
 @NoArgsConstructor
 public class BoardCreateRequest {
@@ -15,10 +14,9 @@ public class BoardCreateRequest {
     private String title;
 
     @NotBlank(message = "내용은 필수입니다.")
-    @Size(min = 4, message = "내용은 4자 이상 적어야 합니다.")
     private String content;
 
-    @NotBlank(message = "작성자는 필수입니다.")
-    @Size(max = 50, message = "작성자명은 50자를 넘을 수 없습니다.")
-    private String writer;
+    // writer는 클라이언트가 보내지 않는다. 로그인한 사용자 정보(JWT)에서 서버가 직접 채운다.
+    // 그렇지 않으면 남의 이름으로 글을 작성하는 것처럼 위장할 수 있기 때문이다.
 }
+

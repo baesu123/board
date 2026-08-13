@@ -4,11 +4,13 @@ import com.example.board.dto.BoardCreateRequest;
 import com.example.board.dto.BoardResponse;
 import com.example.board.dto.BoardUpdateRequest;
 import com.example.board.dto.PageResponse;
+import com.example.board.security.UserPrincipal;
 import com.example.board.service.BoardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -42,12 +44,19 @@ public class BoardController {
     }
 
     /**
-     * 게시글 등록
+     * 게시글 등록 (로그인 필요)
      * POST /api/boards
+     * Header: Authorization: Bearer {accessToken}
+     *
+     * @AuthenticationPrincipal 은 JwtAuthenticationFilter가 SecurityContext에 심어둔
+     * 로그인 사용자 정보(UserPrincipal)를 자동으로 주입해준다.
      */
     @PostMapping
-    public ResponseEntity<BoardResponse> createBoard(@Valid @RequestBody BoardCreateRequest request) {
-        BoardResponse response = boardService.createBoard(request);
+    public ResponseEntity<BoardResponse> createBoard(
+            @Valid @RequestBody BoardCreateRequest request,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        BoardResponse response = boardService.createBoard(request, principal.getNickname());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -56,11 +65,17 @@ public class BoardController {
      * PUT /api/boards/{id}
      */
     @PutMapping("/{id}")
+    /**
+     * 게시글 수정 (로그인 필요, 본인 글만 수정 가능)
+     * PUT /api/boards/{id}
+     */
+// 변경 후
     public ResponseEntity<BoardResponse> updateBoard(
             @PathVariable Long id,
-            @Valid @RequestBody BoardUpdateRequest request
-    ) {
-        return ResponseEntity.ok(boardService.updateBoard(id, request));
+            @Valid @RequestBody BoardUpdateRequest request,
+            @AuthenticationPrincipal UserPrincipal principal
+    ){
+        return ResponseEntity.ok(boardService.updateBoard(id, request, principal.getNickname()));
     }
 
     /**
@@ -68,8 +83,11 @@ public class BoardController {
      * DELETE /api/boards/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBoard(@PathVariable Long id) {
-        boardService.deleteBoard(id);
+    public ResponseEntity<Void> deleteBoard(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        boardService.deleteBoard(id, principal.getNickname());
         return ResponseEntity.noContent().build(); // 204
     }
 }

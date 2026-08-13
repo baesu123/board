@@ -27,7 +27,11 @@ public class JwtTokenProvider {
     private String secretKey; // 설정에서 비밀키를 가져온다
 
     @Value("${jwt.expiration}")
-    private long expirationMs; // 설정에서 토큰의 만료시간을 가져온다
+    private long accessTokenExpirationMs; // 액세스 토큰 만료시간 1시간
+
+    @Value("${jwt.refresh-expiration}")
+    private long refreshTokenExpirationMs; // 리프레쉬 토큰 만료시간 7일
+
 
     private SecretKey key;
 
@@ -37,9 +41,9 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 //토큰생성
-    public String generateToken(String username, String role) {
+    public String generateAccessToken(String username, String role) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + expirationMs);
+        Date expiry = new Date(now.getTime() + accessTokenExpirationMs);
 
         return Jwts.builder()
                 .subject(username)
@@ -50,9 +54,26 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public long getExpirationMs() {
-        return expirationMs;
+    public String generateRefreshToken(String username) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + refreshTokenExpirationMs);
+
+        return Jwts.builder()
+                .subject(username)
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(key)
+                .compact();
     }
+
+    public long getAccessTokenExpirationMs(){
+        return accessTokenExpirationMs;
+    }
+
+    public long getRefreshTokenExpirationMs(){
+        return refreshTokenExpirationMs;
+    }
+
 //토큰에서 유저네임(id)를 리턴
     public String getUsername(String token) {
         return parseClaims(token).getSubject();

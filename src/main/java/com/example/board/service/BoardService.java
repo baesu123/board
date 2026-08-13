@@ -6,6 +6,7 @@ import com.example.board.dto.BoardResponse;
 import com.example.board.dto.BoardUpdateRequest;
 import com.example.board.dto.PageResponse;
 import com.example.board.exception.BoardNotFoundException;
+import com.example.board.exception.UnauthorizedAccessException;
 import com.example.board.mapper.BoardMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -53,25 +54,31 @@ public class BoardService {
         return BoardResponse.from(board);
     }
 
+
+    // 1. 게시글 작성 로직 변경 (username 추가 수신)
     @Transactional
-    public BoardResponse createBoard(BoardCreateRequest request) {
+    public BoardResponse createBoard(BoardCreateRequest request, String writer) {
         Board board = Board.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
-                .writer(request.getWriter())
+                .writer(writer) // 로그인한 사용자의 닉네임 (JwtAuthenticationFilter가 인증한 사용자)
                 .build();
 
         boardMapper.insert(board); // insert 후 board.getId()에 PK가 채워짐 (useGeneratedKeys)
         return BoardResponse.from(board);
     }
 
+
     @Transactional
-    public BoardResponse updateBoard(Long id, BoardUpdateRequest request) {
+    public BoardResponse updateBoard(Long id, BoardUpdateRequest request,
+                                     String currentNickname) {
         Board board = boardMapper.findById(id);
         if (board == null) {
             throw new BoardNotFoundException(id);
         }
-
+        if (!board.getWriter().equals(currentNickname)){
+            throw new UnauthorizedAccessException("게시글을 수정할 권한이 없습니다.");
+        }
         board.setTitle(request.getTitle());
         board.setContent(request.getContent());
         boardMapper.update(board);
@@ -80,10 +87,13 @@ public class BoardService {
     }
 
     @Transactional
-    public void deleteBoard(Long id) {
+    public void deleteBoard(Long id, String currentNickname) {
         Board board = boardMapper.findById(id);
         if (board == null) {
             throw new BoardNotFoundException(id);
+        }
+        if (!board.getWriter().equals(currentNickname)){
+            throw new UnauthorizedAccessException("게시글을 삭제할 권한이 없습니다.");
         }
         boardMapper.deleteById(id);
     }

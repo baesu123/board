@@ -26,7 +26,7 @@ spring:
 
   sql:
     init:
-      mode: always  # 매번 실행 시 schema.sql / data.sql 자동 실행
+      mode: never  # 매번 실행 시 schema.sql / data.sql 자동 실행
 
 # ===== MyBatis 설정 =====
 mybatis:

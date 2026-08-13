@@ -1,13 +1,11 @@
 package com.example.board.service;
 
 import com.example.board.domain.Board;
-import com.example.board.dto.BoardCreateRequest;
-import com.example.board.dto.BoardResponse;
-import com.example.board.dto.BoardUpdateRequest;
-import com.example.board.dto.PageResponse;
+import com.example.board.dto.*;
 import com.example.board.exception.BoardNotFoundException;
 import com.example.board.exception.UnauthorizedAccessException;
 import com.example.board.mapper.BoardMapper;
+import com.example.board.mapper.CommentMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +18,7 @@ import java.util.List;
 public class BoardService {
 
     private final BoardMapper boardMapper;
+    private final CommentMapper commentMapper;
 
     /**
      * 목록 조회 (검색 + 페이징)
@@ -51,7 +50,13 @@ public class BoardService {
         }
         boardMapper.increaseViewCount(id);
         board.setViewCount(board.getViewCount() + 1); // 응답에도 반영
-        return BoardResponse.from(board);
+
+        // 게시글에 작성된 댓글 목록 조회
+        List<CommentResponse> commentResponses = commentMapper.findByBoardId(id).stream()
+                .map(CommentResponse::from)
+                .toList();
+
+        return BoardResponse.from(board, commentResponses);
     }
 
 

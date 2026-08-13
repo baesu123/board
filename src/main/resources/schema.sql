@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS comment; //댓글 삭제가 맨 위로 오게함 ( 외래키 제약조건 )
+DROP TABLE IF EXISTS comment; -- 댓글 삭제가 맨 위로 오게함 ( 외래키 제약조건 )
 DROP TABLE IF EXISTS board;
 DROP TABLE IF EXISTS users;
 

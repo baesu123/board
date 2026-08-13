@@ -31,3 +31,14 @@ CREATE TABLE comment (
      updated_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
      FOREIGN KEY (board_id) REFERENCES board(id)
 );
+
+CREATE TABLE attachment (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    board_id      BIGINT        NOT NULL,
+    original_name VARCHAR(255)  NOT NULL,
+    stored_name   VARCHAR(255)  NOT NULL,
+    file_path     VARCHAR(500)  NOT NULL,
+    file_size     BIGINT        NOT NULL,
+    created_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (board_id) REFERENCES board(id) ON DELETE CASCADE
+);

@@ -9,9 +9,14 @@ import com.example.board.service.BoardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/boards")
@@ -51,32 +56,29 @@ public class BoardController {
      * @AuthenticationPrincipal 은 JwtAuthenticationFilter가 SecurityContext에 심어둔
      * 로그인 사용자 정보(UserPrincipal)를 자동으로 주입해준다.
      */
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BoardResponse> createBoard(
-            @Valid @RequestBody BoardCreateRequest request,
+            @RequestPart("board") @Valid BoardCreateRequest request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
             @AuthenticationPrincipal UserPrincipal principal
-    ) {
-        BoardResponse response = boardService.createBoard(request, principal.getNickname());
+    ) throws IOException {
+        BoardResponse response = boardService.createBoard(request, principal.getNickname(), files);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
-     * 게시글 수정
-     * PUT /api/boards/{id}
-     */
-    @PutMapping("/{id}")
-    /**
      * 게시글 수정 (로그인 필요, 본인 글만 수정 가능)
      * PUT /api/boards/{id}
      */
-// 변경 후
+    @PutMapping("/{id}")
     public ResponseEntity<BoardResponse> updateBoard(
             @PathVariable Long id,
             @Valid @RequestBody BoardUpdateRequest request,
             @AuthenticationPrincipal UserPrincipal principal
-    ){
+    ) {
         return ResponseEntity.ok(boardService.updateBoard(id, request, principal.getNickname()));
     }
+
 
     /**
      * 게시글 삭제
